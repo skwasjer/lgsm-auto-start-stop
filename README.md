@@ -56,24 +56,24 @@ sudo usermod -aG pcap linux_gsm_user
 
 To confirm everything works, run `tcpdump`. You should not be prompted for `sudo` anymore.
 
-### Add the script
+### Install the script
 
 - Log in with the LinuxGSM user
 - Confirm/ensure you are in the home folder `cd ~`
-- Clone `autostart.sh` from this repo into the home folder
+- Clone from this repo into the home folder
   ```bash
   curl -sL https://github.com/skwasjer/lgsm-autostart/archive/refs/tags/v1.0.0.tar.gz | tar -zxf - lgsm-autostart-1.0.0/autostart.sh && mv ~/lgsm-autostart-1.0.0/autostart.sh ~/ && rmdir ~/lgsm-autostart-1.0.0 && chmod 775 ~/autostart.sh
   ```
 
 ### Test the script
 
-Run the script, and pass it the LinuxGSM shell script and the port/protocol the server is listening on. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
-
 For CLI arguments/usage, run the script without arguments:
 
 ```bash
 ./autostart.sh
 ```
+
+Run the script, and pass it the LinuxGSM shell script and the port/protocol the server is listening on. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
 
 #### Palworld example
 
@@ -89,11 +89,10 @@ Once satisfied everything is functioning, register the script as a service so th
 
 #### Create the service unit
 
-You may want to give it a more specific name if you host multiple servers on the same box (as each will need their own auto start/stop unit)
-
 ```bash
 sudo nano /etc/systemd/system/lgsm-autostart.service
 ```
+> You may want to give it a more specific name if you host multiple servers on the same box (as each will need their own auto start/stop unit)
 
 Paste in the unit definition below, modifying to your needs. Make sure to use the correct user and path for your LinuxGSM server. Note that the script cannot be run as root.
 
