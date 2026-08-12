@@ -1,6 +1,6 @@
 # LinuxGSM server auto start/stop
 
-This repo provides a script to 'pause' servers provisioned through LinuxGSM, so that once all clients disconnect and no network traffic is observed, after some time, the server shuts down. If network traffic is detected, and the server is stopped, it is automatically started.
+This repo provides a script to 'pause' dedicated game servers provisioned through LinuxGSM, so that once all clients disconnect and no network traffic is observed, after some time, the server shuts down. If network traffic is detected, and the server is stopped, it is automatically started.
 
 ## Introduction
 
@@ -18,9 +18,9 @@ Pseudocode for the script operation:
 - Sniff the network interface for incoming traffic on a specific port/protocol.
   - Is the game server running?
     - If there is incoming traffic, reset timer.
-    - If timer expires, stop the server.
+    - If the timer expires, stop the server using LGSM script.
   - Is the game server stopped?
-    - If there is incoming traffic, start server.
+    - If there is incoming traffic, start the server using LGSM script.
 
 ## How to use
 
@@ -73,15 +73,19 @@ For CLI arguments/usage, run the script without arguments:
 ./autostart.sh
 ```
 
-Run the script, and pass it the LinuxGSM shell script and the port/protocol the server is listening on. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
+Run the script with arguments, such as the LinuxGSM shell script and the port/protocol of the game server. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
 
 #### Palworld example
 
-Palworld listens on port 8211 (UDP) and the LGSM command is `pwserver`:
+For example, Palworld listens on port 8211 (UDP) and the LGSM command is `pwserver`.
+In this example, the `-t` argument also specifies how long to wait after the last client disconnects, before the server is shut down.
 
 ```bash
 ./autostart.sh ./pwserver -p 8211 --udp -t 30
 ```
+
+> Test your configuration, by connecting to the server, leaving it, wait longer than the stop delay interval, and try to reconnect again as well. Observe the console output while doing so to verify everything functions as expected.
+Once you are done testing, you can stop the script. You are now ready to configure it as a service (see below)
 
 ### Register as a `systemd` service
 
@@ -136,3 +140,14 @@ And done!
   My advice is to schedule these jobs during timeframes when it is unlikely that anyone would be playing to avoid issues. I will update this section when I have further evidence/tested its behavior under those conditions.
 
   I'd also advice disabling the `systemd` service when you are manually performing maintenance.
+
+## Supported game servers
+
+Tested support for:
+- Palworld
+
+> If you use my script for other game servers supported by LinuxGSM, please let me know via a GitHub issue or send a pull request to update this list, so that future gamers know what servers are confirmed supported!
+
+## Links
+
+- https://linuxgsm.com/
