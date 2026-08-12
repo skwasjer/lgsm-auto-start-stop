@@ -62,9 +62,8 @@ To confirm everything works, run `tcpdump`. You should not be prompted for `sudo
 - Confirm/ensure you are in the home folder `cd ~`
 - Clone `autostart.sh` from this repo into the home folder
   ```bash
-  curl https://raw.githubusercontent.com/skwasjer/lgsm-auto-start-stop/refs/heads/main/autostart.sh -o ~/autostart.sh  
+  curl -sL https://github.com/skwasjer/lgsm-autostart/archive/refs/tags/v1.0.0.tar.gz | tar -zxf - lgsm-autostart-1.0.0/autostart.sh && mv ~/lgsm-autostart-1.0.0/autostart.sh ~/ && rmdir ~/lgsm-autostart-1.0.0 && chmod 775 ~/autostart.sh
   ```
-- Set file permissions: `chmod 775 ~/autostart.sh`
 
 ### Test the script
 
