@@ -1,4 +1,4 @@
-# LinuxGSM server auto start/stop
+# LinuxGSM server auto pause
 
 This repo provides a script to 'pause' dedicated game servers provisioned through LinuxGSM, so that once all clients disconnect and no network traffic is observed, after some time, the server shuts down. If network traffic is detected, and the server is stopped, it is automatically started.
 
@@ -62,7 +62,7 @@ To confirm everything works, run `tcpdump`. You should not be prompted for `sudo
 - Confirm/ensure you are in the home folder `cd ~`
 - Clone from this repo into the home folder
   ```bash
-  curl -sL https://github.com/skwasjer/lgsm-autostart/archive/refs/tags/v1.0.0.tar.gz | tar -zxf - lgsm-autostart-1.0.0/autostart.sh && mv ~/lgsm-autostart-1.0.0/autostart.sh ~/ && rmdir ~/lgsm-autostart-1.0.0 && chmod 775 ~/autostart.sh
+  curl -sL https://github.com/skwasjer/lgsm-autopause/archive/refs/tags/v2.0.0.tar.gz | tar -zxf - lgsm-autopause-2.0.0/autopause.sh && mv ~/lgsm-autopause-2.0.0/autopause.sh ~/ && rmdir ~/lgsm-autopause-2.0.0 && chmod 775 ~/autopause.sh
   ```
 
 ### Test the script
@@ -70,7 +70,7 @@ To confirm everything works, run `tcpdump`. You should not be prompted for `sudo
 For CLI arguments/usage, run the script without arguments:
 
 ```bash
-./autostart.sh
+./autopause.sh
 ```
 
 Run the script with arguments, such as the LinuxGSM shell script and the port/protocol of the game server. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
@@ -81,7 +81,7 @@ For example, Palworld listens on port 8211 (UDP) and the LGSM command is `pwserv
 In this example, the `-t` argument also specifies how long to wait after the last client disconnects, before the server is shut down.
 
 ```bash
-./autostart.sh ./pwserver -p 8211 --udp -t 30
+./autopause.sh ./pwserver -p 8211 --udp -t 30
 ```
 
 > Test your configuration, by connecting to the server, leaving it, wait longer than the stop delay interval, and try to reconnect again as well. Observe the console output while doing so to verify everything functions as expected.
@@ -94,7 +94,7 @@ Once satisfied everything is functioning, register the script as a service so th
 #### Create the service unit
 
 ```bash
-sudo nano /etc/systemd/system/lgsm-autostart.service
+sudo nano /etc/systemd/system/lgsm-autopause.service
 ```
 > You may want to give it a more specific name if you host multiple servers on the same box (as each will need their own auto start/stop unit)
 
@@ -104,13 +104,13 @@ The example below is specifically for a Palworld server.
 
 ```console
 [Unit]
-Description=Palworld auto start/stop service
+Description=Palworld autopause service
 After=network.target
 
 [Service]
 User=pwserver
 WorkingDirectory=/home/pwserver
-ExecStart=/home/pwserver/autostart.sh /home/pwserver/pwserver -p 8211 --udp -t 30
+ExecStart=/home/pwserver/autopause.sh /home/pwserver/pwserver -p 8211 --udp -t 30
 Type=simple
 Restart=on-failure
 
@@ -125,8 +125,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable lgsm-auto-start-stop.service
-sudo systemctl start lgsm-auto-start-stop.service
+sudo systemctl enable lgsm-autopause.service
+sudo systemctl start lgsm-autopause.service
 ```
 
 And done!
