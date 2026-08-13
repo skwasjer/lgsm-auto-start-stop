@@ -73,15 +73,15 @@ For CLI arguments/usage, run the script without arguments:
 ./autopause.sh
 ```
 
-Run the script with arguments, such as the LinuxGSM shell script and the port/protocol of the game server. The port should be the actual game port, NOT the query port (used for game browser/server discovery).
-
 #### Palworld example
 
-For example, Palworld listens on port 8211 (UDP) and the LGSM command is `pwserver`.
+Run the script with at least as argument the LinuxGSM shell script. The script will read the LGSM config and extract the required configuration (port and server executable). There are some optional arguments such as specifying that the protocol is UDP (`--udp`). It is not required, but recommended to limit what that only UDP traffic can trigger a server start.
+
+For example, Palworld uses UDP and the LGSM command is `pwserver`.
 In this example, the `-t` argument also specifies how long to wait after the last client disconnects, before the server is shut down.
 
 ```bash
-./autopause.sh ./pwserver -p 8211 --udp -t 30
+./autopause.sh ./pwserver --udp -t 30
 ```
 
 > Test your configuration, by connecting to the server, leaving it, wait longer than the stop delay interval, and try to reconnect again as well. Observe the console output while doing so to verify everything functions as expected.
