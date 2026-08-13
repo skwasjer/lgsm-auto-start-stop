@@ -34,7 +34,7 @@ show_usage() {
 echo_dbg() {
     if [[ $debug -eq 1 ]]; then
         if [[ $# -gt 0 ]]; then
-            printf '%s\n' "$*"
+            printf '%b\n' "$*"
         else
             echo
         fi
@@ -109,14 +109,41 @@ done
 if [[ $# -ne 1 ]]; then
     show_usage
 fi
-lgsm_cmd=$1
-lgsm_server=${lgsm_cmd##*/}
 
+lgsm_cmd=$(realpath $1)
 if ! [[ -f "${lgsm_cmd}" ]]; then
     echo -e "${0}: LGSM_SCRIPT not found." >&2
     exit 2
 fi
 
+# Load server executable and port from LGSM config. The config does not specify if protocol is UDP/TCP.
+# We could grab it using `ss` but that requires the server to be up. So, in case not explicitly specified via CLI, we listen on both protocols.
+lgsm_server_instance=${lgsm_cmd##*/}
+lgsm_root_path=${lgsm_cmd::-${#lgsm_server_instance}-1}
+
+cfg_path="${lgsm_root_path}/lgsm/config-lgsm/${lgsm_server_instance}"
+cfg_default="${cfg_path}/_default.cfg"
+cfg_instance="${cfg_path}/${lgsm_server_instance}.cfg"
+
+get_config_value() {
+    v=$(cat ${cfg_instance} | sed -n "s/^${1}=//p" | xargs)
+    if [[ $v == '' ]]; then
+        v=$(cat ${cfg_default} | sed -n "s/^${1}=//p" | xargs)
+    fi
+    echo $v
+}
+
+# Get the server game port, if not specified via CLI.
+if [[ $port -eq 0 ]]; then
+    port=$(get_config_value "port")
+fi
+
+# From server details, extract the full command line. This is later used to determine if the server is running.
+server_proc_name=$(get_config_value "executable")
+server_details="$(${lgsm_cmd} details)"
+server_cmd_line="$(echo "${server_details}" | grep -i "${server_proc_name}")"
+
+# Validate CLI arguments.
 if ! [[ $port =~ $re_int ]] || [[ $port -le 1024 ]]; then
     if [[ $port -eq 0 ]]; then
         show_usage
@@ -137,7 +164,17 @@ if [[ $tcp -eq 0 ]] && [[ $udp -eq 0 ]]; then
     udp=1
 fi
 
-echo_dbg debug=$debug verbose=$verbose lgsm_cmd=$lgsm_cmd port=$port auto_stop_after_sec=$auto_stop_after_sec tcp=$tcp udp=$udp
+echo_dbg "debug=${debug}
+verbose=${verbose}
+lgsm_cmd=${lgsm_cmd}
+lgsm_server_instance=${lgsm_server_instance}
+port=${port}
+auto_stop_after_sec=${auto_stop_after_sec}
+tcp=${tcp}
+udp=${udp}
+server_proc_name=${server_proc_name}
+server_cmd_line=${server_cmd_line}"
+
 
 set +e
 
@@ -148,7 +185,8 @@ packet_count=40
 
 
 is_server_running() {
-    pgrep -fa "PalServer-Linux-Shipping.*\-port=${port}" > /dev/null
+    # Find the tmux session.
+    pgrep -fa "${server_cmd_line}" > /dev/null
 }
 
 start_server() {
@@ -189,7 +227,7 @@ listen() {
 prev_packet_epoch_time=$(date -u +%s)
 while :; do
     if is_server_running; then
-        echo -ne "${CLR}${lgsm_server} is ${GREEN}RUNNING${NC}: Monitoring client activity..."
+        echo -ne "${CLR}${lgsm_server_instance} is ${GREEN}RUNNING${NC}: Monitoring client activity..."
         while is_server_running; do
             last_packet=$(listen ${packet_count} | tail -2)
             conn_state=$?
@@ -214,7 +252,7 @@ while :; do
             fi
         done
     else
-        echo -ne "${CLR}${lgsm_server} is ${RED}STOPPED${NC}: Waiting for clients..."
+        echo -ne "${CLR}${lgsm_server_instance} is ${RED}STOPPED${NC}: Waiting for clients..."
         while ! is_server_running; do
             # As soon as an inbound packet is received, start the server.
             last_packet=$(listen)
