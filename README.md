@@ -110,7 +110,7 @@ After=network.target
 [Service]
 User=pwserver
 WorkingDirectory=/home/pwserver
-ExecStart=/home/pwserver/autopause.sh /home/pwserver/pwserver -p 8211 --udp -t 30
+ExecStart=/home/pwserver/autopause.sh /home/pwserver/pwserver --udp -t 30
 Type=simple
 Restart=on-failure
 
